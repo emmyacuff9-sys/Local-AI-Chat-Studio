@@ -1,4 +1,4 @@
-# Emmy’s World AI
+# Local AI Chat Studio
 
 A local-first AI chat UI with multi-provider support (OpenRouter and Venice AI), system prompt management, conversation history, token tracking, and theme switching. Designed for experimenting with models, prompts, and parameters without frameworks or unnecessary bloat.
 
@@ -47,7 +47,7 @@ This project is intended for people on a tight budget who want to test and compa
 ## Why This Repo Is Simple on Purpose
 
 Parts of this README were AI-generated based on the code, with minimal edits.  
-I intentionally kept this project beginner-friendly and avoided overwhelming users with thousands of lines of code.
+I intentionally kept this project beginner-friendly.
 
 Advanced developers can easily extend or modify the project to add features.  
 This repo is meant to be **easy to understand, easy to run, and easy to modify**.
