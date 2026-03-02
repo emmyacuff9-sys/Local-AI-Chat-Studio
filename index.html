@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emmy's World AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+<style>
+:root {
+  --color-bg: #f0f7ff;
+  --color-bg-dark: #1e1f2f;
+  --color-primary: #ff7eb9;
+  --color-primary-dark: #ff5599;
+  --color-accent: #6fffe9;
+  --color-text: #333;
+  --color-text-dark: #fff;
+  --transition: 0.3s;
+  --header-height: 60px;
+}
+body {margin:0;font-family:'Quicksand',sans-serif;background:var(--color-bg);color:var(--color-text);overflow-x:hidden;transition:background var(--transition),color var(--transition);}
+body.dark {background:var(--color-bg-dark);color:var(--color-text-dark);}
+
+#mainHeader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--header-height);
+  background: var(--color-bg);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  transition: background var(--transition), border-color var(--transition);
+}
+body.dark #mainHeader { background: var(--color-bg-dark); border-color: rgba(255,255,255,0.1); }
+
+#menuIcon {
+  position: absolute; left: 15px; font-size: 24px; cursor: pointer;
+  background: var(--color-primary); color: #fff; width: 40px; height: 40px;
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+#themeToggle {
+  position: absolute; right: 15px; font-size: 20px; cursor: pointer;
+  background: var(--color-primary); color: #fff; width: 40px; height: 40px;
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+}
+
+#drawer {
+  position:fixed; top: var(--header-height); left:-360px; width:360px;
+  height: calc(100% - var(--header-height)); background:#fff; color:#333; padding:20px;
+  box-sizing:border-box; transition:left var(--transition); z-index:1100;
+  border-radius:0 12px 12px 0; box-shadow:3px 0 15px rgba(0,0,0,0.1); overflow-y:auto;
+}
+#drawer.dark { background:#2b2c44; color:#fff; }
+#drawer.open { left:0; }
+#drawer h2 { font-size:1.1rem; margin-top:20px; border-bottom:2px solid #ff7eb9; padding-bottom:6px; }
+
+.chat-nav-item, .promptItem { display:flex; justify-content:space-between; align-items:center; background:#fef3f9; margin:8px 0; padding:8px 12px; border-radius:12px; cursor: pointer; }
+.chat-nav-item.active { border: 2px solid var(--color-primary); }
+#drawer.dark .chat-nav-item, #drawer.dark .promptItem { background:#3a3b5a; }
+
+.promptBtns button, .navBtns button {margin-left:4px;padding:4px 8px;font-size:0.75rem;border:none;border-radius:8px;background:var(--color-primary);color:#fff;cursor:pointer;}
+
+#chatContainer { display:flex; flex-direction:column; height: calc(100vh - var(--header-height)); margin-top: var(--header-height); transition: margin-left var(--transition); }
+#chatContainer.shifted { margin-left:360px; }
+
+#tokenCounter {
+  background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px); padding: 8px 20px;
+  font-size: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: center; gap: 20px;
+}
+.dark #tokenCounter { background: rgba(30, 31, 47, 0.8); color: #aaa; }
+
+#chatWindow { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; padding-bottom: 100px; }
+.message { max-width:80%; padding:12px 20px; border-radius:20px; position:relative; word-wrap:break-word; line-height:1.5; }
+.user { align-self:flex-end; background:linear-gradient(135deg,#ff9de2,#ff7eb9); color:#fff; }
+.bot { align-self:flex-start; background:#e0f7ff; color:#333; }
+.dark .bot { background:#44497a; color:#fff; }
+.system-msg { align-self: center; color: #666; font-size: 0.8rem; }
+
+#inputContainer { display:flex; padding:12px; background:#fff; align-items:center; gap:10px; border-top:2px solid var(--color-primary); position: sticky; bottom: 0; }
+.dark #inputContainer { background:#2b2c44; }
+#inputBox { flex:1; padding:14px 18px; border-radius:30px; border:none; outline:none; font-size:1rem; background:#f2f2f2; color: #333; }
+.dark #inputBox { background:#3a3b5a; color: #fff; }
+
+.setting-item { margin-bottom: 12px; }
+input, select { width:100%; box-sizing:border-box; padding:8px; border-radius:8px; border:1px solid #ddd; color: #333; }
+.dark input, .dark select { background:#3a3b5a; color:#fff; border-color:#555; }
+.primary-btn, .danger-btn { padding:10px; border:none; border-radius:12px; cursor:pointer; color:#fff; width: 100%; margin-top: 5px; font-weight:600; }
+.primary-btn { background:var(--color-primary); }
+.danger-btn { background:#f44336; }
+
+pre { background:#1e1e1e; color:#f8f8f2; padding:12px; border-radius:12px; overflow-x:auto; white-space:pre-wrap; font-family: monospace; }
+.copyIcon { position: absolute; right: 8px; bottom: 4px; font-size: 12px; opacity: 0.5; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header id="mainHeader">
+  <div id="menuIcon">&#9776;</div>
+  <div id="themeToggle">&#9728;</div>
+</header>
+
+<div id="drawer">
+  <h2>Conversations</h2>
+  <button id="newChatBtn" class="primary-btn">+ New Conversation</button>
+  <div id="conversationList"></div>
+
+  <h2>Parameters</h2>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <div class="setting-item"><label>Temp</label><input type="number" id="param-temp" step="0.1" value="0.7"></div>
+    <div class="setting-item"><label>Top P</label><input type="number" id="param-top-p" step="0.1" value="1.0"></div>
+    <div class="setting-item"><label>Max Gen</label><input type="number" id="param-max-tokens" value="4096"></div>
+    <div class="setting-item"><label>Context</label><input type="number" id="param-context-window" value="32000"></div>
+  </div>
+  <button id="resetParamsBtn" class="primary-btn" style="background:#888;">Reset Params</button>
+
+  <h2>Settings</h2>
+  <div class="setting-item">
+    <label>Provider:</label>
+    <select id="providerSelect"><option value="openrouter">OpenRouter</option><option value="venice">Venice AI</option></select>
+  </div>
+  <div class="setting-item" id="openRouterKeyContainer"><label>OpenRouter Key:</label><input type="password" id="apiKeyInput"></div>
+  <div class="setting-item" id="veniceKeyContainer" style="display:none;"><label>Venice Key:</label><input type="password" id="veniceKeyInput"></div>
+  <div class="setting-item"><label>Model:</label><select id="modelSelect"></select></div>
+  <button id="saveSettingsBtn" class="primary-btn">Save Settings</button>
+
+  <h2>System Prompts</h2>
+  <div id="promptList"></div>
+  <input type="text" id="newPrompt" placeholder="New prompt..."><button id="addPromptBtn" class="primary-btn">Add</button>
+</div>
+
+<div id="chatContainer">
+  <div id="tokenCounter">
+    <span>Total: <strong id="total-tokens">0</strong></span>
+    <span>Memory: <strong id="context-tokens">0</strong> / <span id="limit-tokens">32000</span></span>
+  </div>
+  <div id="chatWindow"></div>
+  <div id="inputContainer">
+    <input type="text" id="inputBox" placeholder="Type here...">
+    <button id="sendBtn">&#10148;</button>
+  </div>
+</div>
+
+<div id="overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);display:none;z-index:1050;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/prism.min.js"></script>
+<script>
+const chatWindow=document.getElementById('chatWindow'), inputBox=document.getElementById('inputBox'), sendBtn=document.getElementById('sendBtn'), drawer=document.getElementById('drawer'), menuIcon=document.getElementById('menuIcon'), themeToggle=document.getElementById('themeToggle'), promptList=document.getElementById('promptList'), conversationList=document.getElementById('conversationList'), apiKeyInput=document.getElementById('apiKeyInput'), veniceKeyInput=document.getElementById('veniceKeyInput'), modelSelect=document.getElementById('modelSelect'), providerSelect=document.getElementById('providerSelect'), overlay=document.getElementById('overlay');
+const totalTokenEl=document.getElementById('total-tokens'), contextTokenEl=document.getElementById('context-tokens'), limitTokenEl=document.getElementById('limit-tokens');
+const newChatBtn = document.getElementById('newChatBtn'), resetParamsBtn = document.getElementById('resetParamsBtn');
+
+const DEFAULT_PARAMS = { temp: 0.7, topP: 1.0, maxTokens: 4096, contextWindow: 32000 };
+
+let prompts=[], hiddenPrompts=new Set(), conversations=[], activeChatId=null, darkMode=false, lastRequestTime=0;
+
+// Helper to determine the API root URL
+const getApiUrl = (path) => {
+  // If running via localhost FastAPI or standard web server, use relative path
+  if (window.location.origin.startsWith('http')) {
+    return path;
+  }
+  // Fallback for non-standard environments (like blob previews)
+  return 'http://localhost:8000' + path;
+};
+
+function estimateTokens(t){ return Math.ceil((t||"").length / 4); }
+
+async function fetchModels() {
+  const provider = providerSelect.value;
+  const key = provider === 'openrouter' ? apiKeyInput.value : veniceKeyInput.value;
+  
+  modelSelect.innerHTML = '<option>Loading models...</option>';
+
+  try {
+    const res = await fetch(getApiUrl('/api/models'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider, api_key: key })
+    });
+    
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    let models = [];
+
+    if (provider === 'openrouter') {
+      models = data.data.filter(m => m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0")
+                        .map(m => ({ name: m.name || m.id, value: m.id }));
+      if (models.length === 0) models = data.data.map(m => ({ name: m.name, value: m.id }));
+    } else {
+      models = data.data.map(m => ({ name: m.id, value: m.id }));
+    }
+
+    modelSelect.innerHTML = '';
+    models.forEach(m => {
+      const o = document.createElement('option');
+      o.value = m.value;
+      o.textContent = m.name;
+      modelSelect.appendChild(o);
+    });
+
+    const savedModel = localStorage.getItem('apiModel');
+    if (savedModel) modelSelect.value = savedModel;
+  } catch (e) {
+    console.error("Model fetch error:", e);
+    modelSelect.innerHTML = '<option value="">Error loading models</option>';
+    addMessage(`Error fetching models: ${e.message}`, 'system-msg', true);
+  }
+}
+
+function init(){
+  prompts=JSON.parse(localStorage.getItem('systemPrompts'))||[];
+  hiddenPrompts=new Set(JSON.parse(localStorage.getItem('hiddenPrompts'))||[]);
+  conversations=JSON.parse(localStorage.getItem('conversations'))||[];
+  
+  const prov=localStorage.getItem('apiProvider')||'openrouter';
+  providerSelect.value=prov;
+  apiKeyInput.value=localStorage.getItem('openRouterApiKey')||'';
+  veniceKeyInput.value=localStorage.getItem('veniceApiKey')||'';
+  
+  const storedParams = JSON.parse(localStorage.getItem('aiParams')) || DEFAULT_PARAMS;
+  document.getElementById('param-temp').value = storedParams.temp;
+  document.getElementById('param-top-p').value = storedParams.topP;
+  document.getElementById('param-max-tokens').value = storedParams.maxTokens;
+  document.getElementById('param-context-window').value = storedParams.contextWindow;
+
+  if(!conversations.length) createNewChat(); else switchChat(conversations[0].id);
+  renderPrompts(); 
+  renderConversationList(); 
+  toggleProviderUI();
+  fetchModels();
+}
+
+function updateTokenUI(){
+  const chat=conversations.find(c=>c.id===activeChatId); if(!chat) return;
+  totalTokenEl.textContent=chat.history.reduce((s,m)=>s+estimateTokens(m.text),0);
+  const win=parseInt(document.getElementById('param-context-window').value);
+  limitTokenEl.textContent=win;
+  let used=prompts.filter((_,i)=>!hiddenPrompts.has(i)).reduce((s,p)=>s+estimateTokens(p),0);
+  for(let i=chat.history.length-1; i>=0; i--){
+    let t=estimateTokens(chat.history[i].text);
+    if(used+t <= win) used+=t; else break;
+  }
+  contextTokenEl.textContent=used;
+}
+
+providerSelect.onchange=e=>{ 
+  toggleProviderUI(); 
+  fetchModels(); 
+};
+
+function toggleProviderUI(){
+  document.getElementById('openRouterKeyContainer').style.display=providerSelect.value==='openrouter'?'block':'none';
+  document.getElementById('veniceKeyContainer').style.display=providerSelect.value==='venice'?'block':'none';
+}
+
+function createNewChat(){
+  const id=Date.now().toString(); conversations.unshift({id, name:"New Chat", history:[]});
+  localStorage.setItem('conversations', JSON.stringify(conversations)); switchChat(id); renderConversationList();
+}
+
+function switchChat(id){
+  activeChatId=id; const chat=conversations.find(c=>c.id===id); chatWindow.innerHTML='';
+  chat.history.forEach(m=>addMessage(m.text, m.role, true)); renderConversationList(); updateTokenUI();
+}
+
+function renderConversationList(){
+  conversationList.innerHTML=''; conversations.forEach(c=>{
+    const d=document.createElement('div'); d.className='chat-nav-item'+(activeChatId===c.id?' active':'');
+    d.innerHTML=`<span>${c.name}</span><div class="navBtns"><button onclick="deleteChat('${c.id}', event)">×</button></div>`;
+    d.onclick=()=>switchChat(c.id); conversationList.appendChild(d);
+  });
+}
+
+function deleteChat(id, e){ e.stopPropagation(); conversations=conversations.filter(c=>c.id!==id); if(!conversations.length) createNewChat(); else if(activeChatId===id) switchChat(conversations[0].id); localStorage.setItem('conversations', JSON.stringify(conversations)); renderConversationList(); }
+
+function renderPrompts(){
+  promptList.innerHTML=''; prompts.forEach((p,i)=>{
+    const h=hiddenPrompts.has(i), d=document.createElement('div'); d.className='promptItem';
+    if(h) d.style.opacity='0.5';
+    d.innerHTML=`<span>${p.slice(0,20)}...</span><div class="promptBtns">
+      <button onclick="togglePrompt(${i})">${h?'On':'Off'}</button>
+      <button onclick="editPrompt(${i})">Edit</button>
+      <button onclick="deletePrompt(${i})">×</button>
+    </div>`;
+    promptList.appendChild(d);
+  });
+}
+
+function togglePrompt(i){ if(hiddenPrompts.has(i)) hiddenPrompts.delete(i); else hiddenPrompts.add(i); localStorage.setItem('hiddenPrompts', JSON.stringify([...hiddenPrompts])); renderPrompts(); updateTokenUI(); }
+
+function editPrompt(i){
+  const newText = prompt("Edit Prompt:", prompts[i]);
+  if(newText !== null && newText.trim() !== ""){
+    prompts[i] = newText.trim();
+    localStorage.setItem('systemPrompts', JSON.stringify(prompts));
+    renderPrompts();
+  }
+}
+
+function deletePrompt(i){ 
+  prompts.splice(i,1); 
+  const newHidden = new Set();
+  hiddenPrompts.forEach(val => {
+    if (val < i) newHidden.add(val);
+    else if (val > i) newHidden.add(val - 1);
+  });
+  hiddenPrompts = newHidden;
+  localStorage.setItem('hiddenPrompts', JSON.stringify([...hiddenPrompts]));
+  localStorage.setItem('systemPrompts', JSON.stringify(prompts)); 
+  renderPrompts(); 
+}
+
+function addMessage(text, role='bot', skipSave=false){
+  const div=document.createElement('div'); div.className='message '+role;
+  if(role==='system-msg') div.textContent=text;
+  else {
+    const parts=text.split(/(```[\s\S]*?```)/g);
+    parts.forEach(p=>{
+      if(p.startsWith('```')){
+        const m=p.match(/```(\w+)?\n?([\s\S]*?)```/);
+        if(m){
+          const pre=document.createElement('pre'), code=document.createElement('code');
+          if(m[1]) code.className='language-'+m[1]; code.textContent=m[2].trim();
+          pre.appendChild(code); div.appendChild(pre);
+        }
+      } else {
+        const s=document.createElement('span'); s.innerHTML=p.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>');
+        div.appendChild(s);
+      }
+    });
+  }
+  if(role!=='system-msg'){ const c=document.createElement('span'); c.className='copyIcon'; c.textContent='copy'; c.onclick=()=>navigator.clipboard.writeText(text); div.appendChild(c); }
+  chatWindow.appendChild(div); chatWindow.scrollTop=chatWindow.scrollHeight;
+  if (typeof Prism !== 'undefined') {
+    div.querySelectorAll('pre code').forEach(block => Prism.highlightElement(block));
+  }
+  if(!skipSave && role!=='system-msg'){
+    const chat=conversations.find(c=>c.id===activeChatId); chat.history.push({text, role});
+    if(chat.history.length===1 && role==='user') chat.name=text.slice(0,15);
+    localStorage.setItem('conversations', JSON.stringify(conversations)); renderConversationList(); updateTokenUI();
+  }
+  return div;
+}
+
+async function callApi(msgs){
+  const elapsed=Date.now()-lastRequestTime; if(elapsed<5000){ const w=5000-elapsed; addMessage(`Wait ${Math.ceil(w/1000)}s...`, 'system-msg', true); await new Promise(r=>setTimeout(r,w)); }
+  const provider=providerSelect.value, key=provider==='openrouter'?apiKeyInput.value:veniceKeyInput.value;
+  try {
+    lastRequestTime=Date.now();
+    const res=await fetch(getApiUrl('/api/chat'), {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        provider, api_key: key,
+        payload: {
+          model: modelSelect.value, messages: msgs,
+          temperature: parseFloat(document.getElementById('param-temp').value),
+          max_tokens: parseInt(document.getElementById('param-max-tokens').value)
+        }
+      })
+    });
+    if(!res.ok) return `Error ${res.status}: ${await res.text()}`;
+    const d=await res.json(); return d.choices[0].message.content;
+  } catch(e){ return `Error: ${e.message}`; }
+}
+
+async function sendMessage(forcedText=null){
+  const txt= forcedText || inputBox.value.trim(); if(!txt) return; 
+  if(!forcedText) { addMessage(txt, 'user'); inputBox.value=''; }
+  const think=addMessage('Thinking...', 'bot', true), chat=conversations.find(c=>c.id===activeChatId);
+  const win=parseInt(document.getElementById('param-context-window').value);
+  let final=[], used=0; 
+  prompts.filter((_,i)=>!hiddenPrompts.has(i)).forEach(p=>{ 
+    final.push({role:'system', content:p}); 
+    used+=estimateTokens(p); 
+  });
+  let hist=[], uTok=estimateTokens(txt);
+  for(let i=chat.history.length-1; i>=0; i--){
+    let t=estimateTokens(chat.history[i].text);
+    if(used+t <= win-uTok){ 
+      const role = chat.history[i].role === 'bot' ? 'assistant' : chat.history[i].role;
+      hist.unshift({role: role, content:chat.history[i].text}); 
+      used+=t; 
+    } else break;
+  }
+  const reply = await callApi([...final, ...hist, {role:'user', content:txt}]);
+  think.remove(); addMessage(reply);
+}
+
+function saveParams() {
+  const p = {
+    temp: parseFloat(document.getElementById('param-temp').value),
+    topP: parseFloat(document.getElementById('param-top-p').value),
+    maxTokens: parseInt(document.getElementById('param-max-tokens').value),
+    contextWindow: parseInt(document.getElementById('param-context-window').value)
+  };
+  localStorage.setItem('aiParams', JSON.stringify(p));
+  updateTokenUI();
+}
+
+newChatBtn.onclick = createNewChat;
+resetParamsBtn.onclick = () => {
+  document.getElementById('param-temp').value = DEFAULT_PARAMS.temp;
+  document.getElementById('param-top-p').value = DEFAULT_PARAMS.topP;
+  document.getElementById('param-max-tokens').value = DEFAULT_PARAMS.maxTokens;
+  document.getElementById('param-context-window').value = DEFAULT_PARAMS.contextWindow;
+  saveParams();
+};
+
+document.getElementById('saveSettingsBtn').onclick=()=>{
+  localStorage.setItem('openRouterApiKey', apiKeyInput.value); 
+  localStorage.setItem('veniceApiKey', veniceKeyInput.value);
+  localStorage.setItem('apiProvider', providerSelect.value); 
+  localStorage.setItem('apiModel', modelSelect.value);
+  saveParams();
+  fetchModels();
+  addMessage("Saved!", 'system-msg', true);
+};
+
+menuIcon.onclick=()=>{ drawer.classList.toggle('open'); document.getElementById('chatContainer').classList.toggle('shifted'); overlay.style.display=overlay.style.display==='none'?'block':'none'; };
+themeToggle.onclick=()=>{ darkMode=!darkMode; document.body.classList.toggle('dark'); drawer.classList.toggle('dark'); };
+sendBtn.onclick=()=>sendMessage(); inputBox.onkeypress=e=>{if(e.key==='Enter')sendMessage();};
+addPromptBtn.onclick = () => { const txt = document.getElementById('newPrompt').value.trim(); if(txt){ prompts.push(txt); localStorage.setItem('systemPrompts', JSON.stringify(prompts)); renderPrompts(); document.getElementById('newPrompt').value=''; } };
+overlay.onclick=()=>menuIcon.onclick();
+init();
+</script>
+</body>
+</html>
