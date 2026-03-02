@@ -2,7 +2,9 @@
 
 A local-first AI chat UI with multi-provider support (OpenRouter and Venice AI), system prompt management, conversation history, token tracking, and theme switching. Designed for experimenting with models, prompts, and parameters without frameworks or unnecessary bloat.
 
-To run this code make sure the index.html file and main.py file are in the same directory. Also be sure you signup with Openrouter and or Venice AI to create your own API keys. Simply type python3 main.py in your CLI to run the code and click the link displayed to goto the UI. It is very easy to use.
+To run this code make sure the index.html file and main.py file are in the same directory. Also be sure you signup with Openrouter and or Venice AI to create your own API keys. Simply type python3 main.py in your CLI to run the code and click the link displayed to goto the UI. It is very easy to use. 
+
+This is the first time I created a github repo so I cloned this repo and run the code after I cloned it to make sure it works. You should not have any problems. It worked fine when i cloned it and tested it out. 
 
 ---
 
